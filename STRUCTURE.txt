@@ -1,0 +1,169 @@
+GoatRodeos v1 - Project Structure
+=====================================
+
+goatrodeos_v1/
+│
+├── 📋 Documentation Files
+│   ├── README.md                 # Main documentation (installation, features, API)
+│   ├── QUICKSTART.md             # Get started in 5 minutes
+│   ├── DEPLOYMENT.md             # Production deployment guide
+│   ├── PROJECT_SUMMARY.md        # Complete project overview
+│   └── STRUCTURE.txt             # This file
+│
+├── 📦 Root Configuration
+│   ├── package.json              # Workspace root package.json
+│   ├── .gitignore                # Git ignore rules
+│   └── setup.sh                  # Automated setup script
+│
+├── 🖥️  SERVER - Backend (Node.js + Express + TypeScript)
+│   ├── package.json              # Backend dependencies
+│   ├── tsconfig.json             # TypeScript configuration
+│   │
+│   ├── 🔧 Configuration
+│   │   ├── .env                  # Environment variables (local)
+│   │   ├── .env.example          # Example environment template
+│   │   └── .gitignore            # Server-specific git ignore
+│   │
+│   └── src/
+│       │
+│       ├── index.ts              # Main Express server (port 5000)
+│       │
+│       ├── db/ - Database Layer
+│       │   ├── connection.ts     # PostgreSQL connection pool
+│       │   ├── schema.sql        # Database schema & tables
+│       │   ├── setup.ts          # Database initialization script
+│       │   └── seed.ts           # Sample data for testing
+│       │
+│       ├── routes/ - API Endpoints
+│       │   ├── rodeos.ts         # Rodeo CRUD endpoints (6 routes)
+│       │   │   POST   /api/rodeos
+│       │   │   GET    /api/rodeos
+│       │   │   GET    /api/rodeos/:id
+│       │   │   GET    /api/rodeos/link/:link
+│       │   │   PUT    /api/rodeos/:id
+│       │   │   DELETE /api/rodeos/:id
+│       │   │
+│       │   ├── songs.ts          # Song management (4 routes)
+│       │   │   POST   /api/songs
+│       │   │   GET    /api/songs/rodeo/:id
+│       │   │   PUT    /api/songs/:id
+│       │   │   DELETE /api/songs/:id
+│       │   │
+│       │   └── ratings.ts        # Rating submission (4 routes)
+│       │       POST   /api/ratings
+│       │       GET    /api/ratings/song/:id
+│       │       GET    /api/ratings/rodeo/:id/user/:session
+│       │       GET    /api/ratings/rodeo/:id/stats
+│       │
+│       ├── middleware/
+│       │   └── cors.ts           # CORS configuration & security
+│       │
+│       └── types/
+│           └── index.ts          # TypeScript interfaces (Rodeo, Song, Rating)
+│
+├── 🎨 CLIENT - Frontend (React + Vite + Tailwind)
+│   ├── package.json              # Frontend dependencies
+│   ├── tsconfig.json             # TypeScript configuration
+│   ├── tsconfig.node.json        # Node TypeScript config
+│   ├── vite.config.ts            # Vite build configuration
+│   ├── tailwind.config.js        # Tailwind CSS setup
+│   ├── postcss.config.js         # PostCSS with Tailwind
+│   ├── index.html                # HTML entry point
+│   │
+│   ├── 🔧 Configuration
+│   │   ├── .env.local            # Frontend environment variables
+│   │   └── .gitignore            # Frontend-specific git ignore
+│   │
+│   └── src/
+│       │
+│       ├── main.tsx              # React app entry point
+│       ├── App.tsx               # Root component with routing
+│       ├── index.css             # Global styles + star rating CSS
+│       │
+│       ├── pages/ - Route Components
+│       │   ├── Home.tsx          # Landing page (/ route)
+│       │   │   └── Join rodeo or go to admin
+│       │   │
+│       │   ├── RodeoVote.tsx     # Voting page (/vote/:link)
+│       │   │   ├── Display songs
+│       │   │   ├── Star rating UI
+│       │   │   ├── Live stats
+│       │   │   └── Timer countdown
+│       │   │
+│       │   └── AdminDashboard.tsx # Admin panel (/admin)
+│       │       ├── Create rodeos
+│       │       ├── Add songs
+│       │       ├── Copy voting links
+│       │       └── View results
+│       │
+│       ├── components/ - Reusable Components
+│       │   ├── StarRating.tsx    # 5-star rating widget
+│       │   │   └── Interactive hover effects
+│       │   │
+│       │   └── SongCard.tsx      # Song display card
+│       │       ├── Title & artist
+│       │       ├── Vote count
+│       │       ├── Average rating
+│       │       └── Rating input
+│       │
+│       ├── hooks/ - Custom Hooks
+│       │   └── useSessionId.ts   # Session management (localStorage)
+│       │
+│       ├── lib/ - Utilities
+│       │   └── api.ts            # Axios client & API wrapper functions
+│       │       ├── rodeoAPI
+│       │       ├── songAPI
+│       │       └── ratingAPI
+│       │
+│       └── types/
+│           └── index.ts          # TypeScript interfaces
+│               ├── Rodeo
+│               ├── Song
+│               └── Rating
+│
+└── 🗄️  DATABASE - PostgreSQL
+    │
+    ├── Tables:
+    │   ├── rodeos
+    │   │   └── id, name, unique_link, start_date, end_date, status...
+    │   ├── songs
+    │   │   └── id, rodeo_id, title, artist, duration...
+    │   └── ratings
+    │       └── id, rodeo_id, song_id, user_session_id, rating...
+    │
+    └── Indexes on: unique_link, foreign keys for performance
+
+═══════════════════════════════════════════════════════════════
+
+KEY FILES TO KNOW:
+
+Frontend Entry:
+  client/src/main.tsx → client/src/App.tsx → routing
+
+Backend Entry:
+  server/src/index.ts → express setup → routes
+
+Database:
+  server/src/db/schema.sql → tables definition
+  server/src/db/setup.ts → initialize database
+
+API Client:
+  client/src/lib/api.ts → axios wrapper
+
+═══════════════════════════════════════════════════════════════
+
+QUICK NAVIGATION:
+
+Want to...                          Go to:
+─────────────────────────────────────────────────────────────
+Add a new API endpoint              server/src/routes/*
+Add a new page                      client/src/pages/
+Add a new component                 client/src/components/
+Modify database                     server/src/db/schema.sql
+Change styling                      client/src/index.css
+Configure build                     vite.config.ts (client)
+Add dependencies                    package.json files
+Setup production                    DEPLOYMENT.md
+Get started fast                    QUICKSTART.md
+
+═══════════════════════════════════════════════════════════════

@@ -1,0 +1,16 @@
+{
+  "name": "goatrodeos",
+  "version": "1.0.0",
+  "description": "Website for rating songs in rodeos",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "install-all": "npm install && npm install -w server && npm install -w client",
+    "dev": "npm run dev -w server & npm run dev -w client",
+    "build": "npm run build -w server && npm run build -w client",
+    "start": "npm start -w server"
+  }
+}
