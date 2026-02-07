@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { rodeoAPI, ratingAPI } from '../lib/api';
-import { Rodeo, Song } from '../types';
-import { format } from 'date-fns';
+import { Rodeo } from '../types';
 
 export const AdminDashboard: React.FC = () => {
   const [rodeos, setRodeos] = useState<Rodeo[]>([]);
@@ -71,7 +70,6 @@ export const AdminDashboard: React.FC = () => {
     if (!selectedRodeo) return;
 
     try {
-      const result = await rodeoAPI.getById(selectedRodeo.id);
       const response = await fetch(`/api/songs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
