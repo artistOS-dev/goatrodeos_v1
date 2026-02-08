@@ -35,3 +35,8 @@ export const ratingAPI = {
     api.get(`/ratings/rodeo/${rodeoId}/user/${sessionId}`),
   getStats: (rodeoId: string) => api.get(`/ratings/rodeo/${rodeoId}/stats`),
 };
+
+// Diagnostic endpoint
+export const diagnosticAPI = {
+  check: () => api.get('/diagnostic'),
+};

@@ -43,9 +43,15 @@ export const Home: React.FC = () => {
           <p className="text-center text-sm text-gray-600 mb-4">Are you a rodeo master?</p>
           <button
             onClick={() => navigate('/admin')}
-            className="w-full py-2 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-green-700 transition"
+            className="w-full py-2 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-green-700 transition mb-3"
           >
             Go to Admin Dashboard
+          </button>
+          <button
+            onClick={() => navigate('/db-diagnostic')}
+            className="w-full py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition text-sm"
+          >
+            🔧 Database Diagnostic
           </button>
         </div>
       </div>

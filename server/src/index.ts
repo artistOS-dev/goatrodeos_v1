@@ -19,6 +19,24 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// Diagnostic endpoint
+app.get('/api/diagnostic', (req, res) => {
+  const dbUrl = process.env.DATABASE_URL || '';
+  // Extract host and database name without exposing password
+  const match = dbUrl.match(/postgresql:\/\/[^:]+:[^@]+@([^/]+)\/([^\s?]+)/);
+  const host = match ? match[1] : 'unknown';
+  const database = match ? match[2] : 'unknown';
+  
+  res.json({
+    status: 'ok',
+    node_env: process.env.NODE_ENV,
+    database_host: host,
+    database_name: database,
+    port: process.env.PORT || 5000,
+    connection_string_masked: dbUrl ? dbUrl.replace(/:[^:@]+@/, ':****@') : 'not configured'
+  });
+});
+
 // API Routes
 app.use('/api/rodeos', rodeosRouter);
 app.use('/api/songs', songsRouter);

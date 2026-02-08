@@ -1,19 +1,36 @@
 import { useEffect, useState } from 'react';
 import { rodeoAPI } from '../lib/api';
+import { diagnosticAPI } from '../lib/api';
 import { Rodeo } from '../types';
+
+interface DiagnosticInfo {
+  status: string;
+  node_env: string;
+  database_host: string;
+  database_name: string;
+  port: number;
+  connection_string_masked: string;
+}
 
 export function DbDiagnostic() {
   const [rodeos, setRodeos] = useState<Rodeo[]>([]);
+  const [diagnostic, setDiagnostic] = useState<DiagnosticInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchRodeos = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await rodeoAPI.getAll();
-        setRodeos(response.data);
+        
+        // Fetch diagnostic info
+        const diagResponse = await diagnosticAPI.check();
+        setDiagnostic(diagResponse.data);
+        
+        // Fetch rodeos
+        const rodeoResponse = await rodeoAPI.getAll();
+        setRodeos(rodeoResponse.data);
       } catch (err: any) {
         console.error('Database connection error:', err);
         setError(
@@ -26,7 +43,7 @@ export function DbDiagnostic() {
       }
     };
 
-    fetchRodeos();
+    fetchData();
   }, []);
 
   return (
@@ -38,7 +55,7 @@ export function DbDiagnostic() {
 
         {loading && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-blue-800">Loading rodeos from database...</p>
+            <p className="text-blue-800">Loading diagnostic information...</p>
           </div>
         )}
 
@@ -48,6 +65,46 @@ export function DbDiagnostic() {
               ❌ Connection Error
             </h2>
             <p className="text-red-800 font-mono text-sm">{error}</p>
+          </div>
+        )}
+
+        {!loading && diagnostic && (
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-8">
+            <h2 className="text-lg font-semibold text-purple-900 mb-4">
+              📊 Connection String Details
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white p-4 rounded border border-purple-100">
+                <p className="text-sm text-gray-600">Database Host</p>
+                <p className="text-lg font-mono font-semibold text-gray-900">
+                  {diagnostic.database_host}
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded border border-purple-100">
+                <p className="text-sm text-gray-600">Database Name</p>
+                <p className="text-lg font-mono font-semibold text-gray-900">
+                  {diagnostic.database_name}
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded border border-purple-100">
+                <p className="text-sm text-gray-600">Server Port</p>
+                <p className="text-lg font-mono font-semibold text-gray-900">
+                  {diagnostic.port}
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded border border-purple-100">
+                <p className="text-sm text-gray-600">Environment</p>
+                <p className="text-lg font-mono font-semibold text-gray-900">
+                  {diagnostic.node_env}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 bg-white p-4 rounded border border-purple-100">
+              <p className="text-sm text-gray-600 mb-2">Connection String (Masked)</p>
+              <p className="text-sm font-mono bg-gray-100 p-3 rounded break-all text-gray-800">
+                {diagnostic.connection_string_masked}
+              </p>
+            </div>
           </div>
         )}
 
