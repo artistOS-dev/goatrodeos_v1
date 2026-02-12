@@ -94,6 +94,9 @@ export function DbDiagnostic() {
         setRequestMs(Number((performance.now() - startedAt).toFixed(2)));
         setLoading(false);
       }
+
+      setRequestMs(Number((performance.now() - startedAt).toFixed(2)));
+      setLoading(false);
     };
 
     const timer = setTimeout(fetchData, 300);
@@ -239,7 +242,7 @@ export function DbDiagnostic() {
           </div>
         )}
 
-        {!loading && rodeos.length === 0 && !error && (
+        {!loading && rodeos.length === 0 && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-yellow-800">
               No rodeos found in the database. Connection still may be valid if diagnostic data is present.

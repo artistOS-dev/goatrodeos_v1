@@ -146,6 +146,7 @@ app.get('/api/diagnostic', (req, res) => {
 app.use('/api/rodeos', rodeosRouter);
 app.use('/api/songs', songsRouter);
 app.use('/api/ratings', ratingsRouter);
+app.use('/api/db', dbRouter);
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
