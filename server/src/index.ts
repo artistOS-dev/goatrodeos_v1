@@ -11,6 +11,11 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientDistPath = path.resolve(__dirname, '../../client/dist');
+
+
 // Middleware
 app.use(corsMiddleware);
 app.use(express.json());
@@ -147,6 +152,15 @@ app.use('/api/rodeos', rodeosRouter);
 app.use('/api/songs', songsRouter);
 app.use('/api/ratings', ratingsRouter);
 app.use('/api/db', dbRouter);
+
+// Serve frontend from the same service in production (simple 2-tier app: app + database)
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(clientDistPath));
+
+  app.get(/^\/(?!api|health).*/, (req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 // Error handling
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
