@@ -4,7 +4,6 @@ import corsMiddleware from './middleware/cors.js';
 import rodeosRouter from './routes/rodeos.js';
 import songsRouter from './routes/songs.js';
 import ratingsRouter from './routes/ratings.js';
-import dbRouter from './routes/db.js';
 import pool from './db/connection.js';
 
 dotenv.config();
