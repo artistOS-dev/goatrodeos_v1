@@ -1,6 +1,20 @@
 import axios from 'axios';
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:5000/api';
+function resolveApiBaseUrl(): string {
+  const configuredApiUrl = import.meta.env.VITE_API_URL as string | undefined;
+
+  if (configuredApiUrl && configuredApiUrl.trim().length > 0) {
+    return configuredApiUrl;
+  }
+
+  if (typeof window !== 'undefined') {
+    return '/api';
+  }
+
+  return 'http://localhost:5000/api';
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -31,7 +45,7 @@ export const songAPI = {
 export const ratingAPI = {
   submit: (data: any) => api.post('/ratings', data),
   getForSong: (songId: string) => api.get(`/ratings/song/${songId}`),
-  getUserRatings: (rodeoId: string, sessionId: string) => 
+  getUserRatings: (rodeoId: string, sessionId: string) =>
     api.get(`/ratings/rodeo/${rodeoId}/user/${sessionId}`),
   getStats: (rodeoId: string) => api.get(`/ratings/rodeo/${rodeoId}/stats`),
 };
