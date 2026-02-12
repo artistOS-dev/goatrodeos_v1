@@ -6,17 +6,23 @@ interface DiagnosticResponse {
   [key: string]: any;
 }
 
-interface EndpointResult {
-  success: boolean;
-  status: number | null;
-  message: string;
-}
-
 function renderValue(value: any): string {
-  if (value === null) return 'null';
-  if (value === undefined) return 'undefined';
-  if (typeof value === 'string') return value;
-  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (value === null) {
+    return 'null';
+  }
+
+  if (value === undefined) {
+    return 'undefined';
+  }
+
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
   return JSON.stringify(value, null, 2);
 }
 
@@ -28,7 +34,12 @@ function flattenObject(
   Object.entries(input).forEach(([key, value]) => {
     const fullKey = prefix ? `${prefix}.${key}` : key;
 
-    if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+    if (
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      !(value instanceof Date)
+    ) {
       flattenObject(value, fullKey, result);
       return;
     }
@@ -47,41 +58,25 @@ export function DbDiagnostic() {
   const [error, setError] = useState<string | null>(null);
   const [connectionAttempted, setConnectionAttempted] = useState(false);
   const [requestMs, setRequestMs] = useState<number | null>(null);
-  const [endpointResults, setEndpointResults] = useState<Record<string, EndpointResult>>({});
 
   useEffect(() => {
     const fetchData = async () => {
       const startedAt = performance.now();
-      setConnectionAttempted(true);
-      setError(null);
 
-      const diagPromise = diagnosticAPI.check();
-      const rodeoPromise = rodeoAPI.getAll();
-      const [diagResult, rodeoResult] = await Promise.allSettled([diagPromise, rodeoPromise]);
+      try {
+        setConnectionAttempted(true);
+        setError(null);
 
-      const results: Record<string, EndpointResult> = {};
-      const errors: Array<Record<string, any>> = [];
+        const diagResponse = await diagnosticAPI.check();
+        setDiagnostic(diagResponse.data);
 
-      if (diagResult.status === 'fulfilled') {
-        setDiagnostic(diagResult.value.data);
-        results.diagnostic = {
-          success: true,
-          status: diagResult.value.status,
-          message: 'Diagnostic endpoint returned data',
-        };
-      } else {
-        const err: any = diagResult.reason;
+        const rodeoResponse = await rodeoAPI.getAll();
+        setRodeos(rodeoResponse.data);
+      } catch (err: any) {
+        console.error('Database connection error:', err);
         const responsePayload = err.response?.data;
-        setDiagnostic(responsePayload || null);
 
-        results.diagnostic = {
-          success: false,
-          status: err.response?.status || null,
-          message: err.message || 'Diagnostic request failed',
-        };
-
-        errors.push({
-          endpoint: '/diagnostic',
+        const details = {
           message: err.message || 'Unknown client error',
           code: err.code || null,
           status: err.response?.status || null,
@@ -91,41 +86,13 @@ export function DbDiagnostic() {
           baseURL: err.config?.baseURL || null,
           timeout: err.config?.timeout || null,
           responseData: responsePayload || null,
-        });
-      }
-
-      if (rodeoResult.status === 'fulfilled') {
-        setRodeos(rodeoResult.value.data);
-        results.rodeos = {
-          success: true,
-          status: rodeoResult.value.status,
-          message: `Rodeos endpoint returned ${rodeoResult.value.data.length} rows`,
-        };
-      } else {
-        const err: any = rodeoResult.reason;
-        results.rodeos = {
-          success: false,
-          status: err.response?.status || null,
-          message: err.message || 'Rodeos request failed',
         };
 
-        errors.push({
-          endpoint: '/rodeos',
-          message: err.message || 'Unknown client error',
-          code: err.code || null,
-          status: err.response?.status || null,
-          statusText: err.response?.statusText || null,
-          method: err.config?.method || null,
-          url: err.config?.url || null,
-          baseURL: err.config?.baseURL || null,
-          timeout: err.config?.timeout || null,
-          responseData: err.response?.data || null,
-        });
-      }
-
-      setEndpointResults(results);
-      if (errors.length > 0) {
-        setError(JSON.stringify(errors, null, 2));
+        setError(JSON.stringify(details, null, 2));
+        setDiagnostic(responsePayload || null);
+      } finally {
+        setRequestMs(Number((performance.now() - startedAt).toFixed(2)));
+        setLoading(false);
       }
 
       setRequestMs(Number((performance.now() - startedAt).toFixed(2)));
@@ -170,24 +137,6 @@ export function DbDiagnostic() {
           </div>
         </div>
 
-        {!loading && Object.keys(endpointResults).length > 0 && (
-          <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6 mb-6">
-            <h2 className="text-lg font-semibold text-indigo-900 mb-4">🧪 Endpoint Reachability Checks</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(endpointResults).map(([key, value]) => (
-                <div key={key} className="bg-white p-4 rounded border border-indigo-100">
-                  <p className="text-sm text-gray-600">{key}</p>
-                  <p className={`text-sm font-semibold ${value.success ? 'text-green-700' : 'text-red-700'}`}>
-                    {value.success ? 'success' : 'failed'}
-                  </p>
-                  <p className="text-xs font-mono text-gray-700">status: {value.status ?? 'none'}</p>
-                  <p className="text-xs text-gray-700">{value.message}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {loading && connectionAttempted && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
             <div className="flex items-center gap-3">
@@ -202,10 +151,19 @@ export function DbDiagnostic() {
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
-            <h2 className="text-red-900 font-semibold mb-3">❌ Connection / Endpoint Requests Failed</h2>
+            <h2 className="text-red-900 font-semibold mb-3">❌ Connection / Diagnostic Request Failed</h2>
             <div className="bg-white p-4 rounded border border-red-100 mb-3">
               <p className="text-sm text-gray-600 mb-1">Detailed Client Error Object</p>
               <pre className="text-red-800 font-mono text-xs break-all whitespace-pre-wrap">{error}</pre>
+            </div>
+            <div className="bg-white p-4 rounded border border-red-100">
+              <p className="text-sm text-gray-600 mb-2">Troubleshooting</p>
+              <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                <li>Ensure API server is running and reachable at <code className="bg-gray-100 px-1 rounded">{API_URL}</code>.</li>
+                <li>Check server console output for stack traces matching diagnostic endpoint calls.</li>
+                <li>Verify DATABASE_URL and PG* environment variables.</li>
+                <li>If SSL is required by DB provider, validate sslmode or pool SSL settings.</li>
+              </ul>
             </div>
           </div>
         )}
@@ -287,7 +245,7 @@ export function DbDiagnostic() {
         {!loading && rodeos.length === 0 && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-yellow-800">
-              No rodeos returned from API. Use the endpoint checks above to verify whether this is a DB issue or only diagnostic endpoint issue.
+              No rodeos found in the database. Connection still may be valid if diagnostic data is present.
             </p>
           </div>
         )}

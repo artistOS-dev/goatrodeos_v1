@@ -8,7 +8,8 @@ function resolveApiBaseUrl(): string {
   }
 
   if (typeof window !== 'undefined') {
-    return '/api';
+    // Railway deployments often host frontend and API under the same domain.
+    return `${window.location.origin}/api`;
   }
 
   return 'http://localhost:5000/api';

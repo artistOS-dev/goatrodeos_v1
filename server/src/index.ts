@@ -5,8 +5,6 @@ import rodeosRouter from './routes/rodeos.js';
 import songsRouter from './routes/songs.js';
 import ratingsRouter from './routes/ratings.js';
 import pool from './db/connection.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
 dotenv.config();
 
@@ -153,6 +151,7 @@ app.get('/api/diagnostic', (req, res) => {
 app.use('/api/rodeos', rodeosRouter);
 app.use('/api/songs', songsRouter);
 app.use('/api/ratings', ratingsRouter);
+app.use('/api/db', dbRouter);
 
 // Serve frontend from the same service in production (simple 2-tier app: app + database)
 if (process.env.NODE_ENV === 'production') {
